@@ -147,7 +147,7 @@ function viewRecommend() {
   const bar = s => `<span class="bar"><i style="width:${s}%"></i></span><b class="score">${s}</b>`;
   page('recommend', `
   <h1>Рекомендации</h1>
-  <p class="lead">${esc(p.name || 'Ребёнок')}, ${formatAge(p.ageYears * 12 + (p.ageMonths || 0))}. Программа на ${plan.months.length} мес., до ${formatDate(p.endDate)}${plan.schoolAge ? ` — к этому моменту ${formatAge(plan.schoolAge)}, старт школы` : ''}. Отметьте то, что берём в работу.</p>
+  <p class="lead">${esc(p.name || 'Ребёнок')}, ${formatAge(p.ageYears * 12 + (p.ageMonths || 0))} · программа на ${plan.months.length} мес., до ${formatDate(p.endDate)}${plan.schoolAge ? ` — к этому моменту ${formatAge(plan.schoolAge)}, старт школы` : ''}. Отметьте то, что берём в работу.</p>
   <h2>Компетенции</h2>
   <div class="cards3">${compScores.map(cs => { const c = compById(cs.id), on = sel.comps.includes(c.id); return `
     <label class="pick ${on ? 'on' : ''}" style="--c:${c.color}">

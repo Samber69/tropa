@@ -7,6 +7,20 @@ const sample = (arr, k) => shuffle(arr).slice(0, k);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
+// Значки интерфейса: одна линейная семья. Эмодзи остаются только содержанием заданий.
+const ICONS = {
+  sound: '<path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/>',
+  mute: '<path d="M11 5 6 9H3v6h3l5 4z"/><path d="m16 9 5 6"/><path d="m21 9-5 6"/>',
+  play: '<path d="M7 4.5v15l12-7.5z" fill="currentColor"/>',
+  lock: '<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
+  download: '<path d="M12 4v11"/><path d="m7 11 5 5 5-5"/><path d="M5 20h14"/>',
+  up: '<path d="M12 19V5"/><path d="m6 11 6-6 6 6"/>',
+  down: '<path d="M12 5v14"/><path d="m6 13 6 6 6-6"/>',
+  left: '<path d="M19 12H5"/><path d="m11 6-6 6 6 6"/>',
+  right: '<path d="M5 12h14"/><path d="m13 6 6 6-6 6"/>',
+};
+const icon = (name, size = 20) => `<svg class="i" viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[name]}</svg>`;
+
 // ---------- Звук и голос ----------
 const Sound = {
   ctx: null,
@@ -185,7 +199,7 @@ const GEN = {
     const play = () => notes.forEach((m, i) => Sound.tone(midiFreq(m), 0.6, i * 0.8));
     return {
       q: three ? 'Какой звук самый высокий?' : 'Какой звук выше — первый или второй?',
-      visual: `<button class="btn ghost replay" type="button">🔊 Послушать ещё раз</button>`,
+      visual: `<button class="btn ghost replay" type="button">${icon('sound')} Послушать ещё раз</button>`,
       options: notes.map((_, i) => opt(`${['1️⃣', '2️⃣', '3️⃣'][i]}<small>${['первый', 'второй', 'третий'][i]}</small>`, i === hi)),
       play, sayAfter: 2000,
     };
@@ -255,7 +269,7 @@ const GEN = {
       const c = pick([...cons]), sameCons = Math.random() < 0.5;
       const syl = sameCons ? sample([...vows], 3).map(v => c + v) : sample([...cons], 3).map(x => x + pick([...vows]));
       const t = syl[0];
-      return { q: 'Найди слог, который ты слышишь', say: t.toLowerCase(), visual: `<button class="btn ghost replay" type="button">🔊 Ещё раз</button>`, options: shuffle(syl).map(s => opt(s, s === t)), replaySay: t.toLowerCase() };
+      return { q: 'Найди слог, который ты слышишь', say: t.toLowerCase(), visual: `<button class="btn ghost replay" type="button">${icon('sound')} Ещё раз</button>`, options: shuffle(syl).map(s => opt(s, s === t)), replaySay: t.toLowerCase() };
     }
     const pool = WORDS.filter(w => w[0].length <= 5);
     const ws = sample(pool, 3), t = ws[0];
@@ -277,7 +291,7 @@ const GEN = {
   },
   eng(L) {
     const words = sample(ENG[L], L === 3 ? 4 : 3), t = words[0];
-    return { q: `Послушай слово и найди картинку: «${t[0]}»`, say: t[0], sayLang: 'en-US', replaySay: t[0], replayLang: 'en-US', visual: `<button class="btn ghost replay" type="button">🔊 Ещё раз</button>`, options: shuffle(words).map(w => opt(`${w[1]}`, w === t)), noSay: true };
+    return { q: `Послушай слово и найди картинку: «${t[0]}»`, say: t[0], sayLang: 'en-US', replaySay: t[0], replayLang: 'en-US', visual: `<button class="btn ghost replay" type="button">${icon('sound')} Ещё раз</button>`, options: shuffle(words).map(w => opt(`${w[1]}`, w === t)), noSay: true };
   },
 };
 
@@ -299,12 +313,13 @@ function runQuiz(root, skill, level, onDone) {
   const total = 8, pass = 6, gen = GEN[SKILLS[skill].gen];
   let i = 0, score = 0; const results = []; const seen = new Set();
   const next = () => {
+    if (!root.isConnected) return;
     if (i >= total) return onDone({ passed: score >= pass, stars: starsFor(score, total, pass), score, total, pass });
     let item, guard = 0;
     do { item = gen(level); } while (seen.has(item.q + item.options.map(o => o.html).join()) && guard++ < 20);
     seen.add(item.q + item.options.map(o => o.html).join());
     root.innerHTML = `${dotsHTML(total, i, results)}
-      <div class="q"><button class="say" type="button" aria-label="Прочитать вслух">🔊</button><span>${esc(item.q)}</span></div>
+      <div class="q"><button class="say" type="button" aria-label="Прочитать вслух">${icon('sound', 24)}</button><span>${esc(item.q)}</span></div>
       ${item.visual ? `<div class="visual">${item.visual}</div>` : ''}
       <div class="opts ${item.wide ? 'wide' : ''} n${item.options.length}">${item.options.map((o, k) => `<button class="opt" data-k="${k}" type="button">${o.html}</button>`).join('')}</div>`;
     const speak = () => { if (!item.noSay) Voice.say(item.q); if (item.say) setTimeout(() => Voice.say(item.say, item.sayLang || 'ru-RU'), item.noSay ? 0 : 1600); };
@@ -334,6 +349,7 @@ function runOrder(root, skill, level, onDone) {
   const k = [3, 4, 5][level - 1];
   let r = 0, firstTry = 0; const results = [];
   const round = () => {
+    if (!root.isConnected) return;
     if (r >= total) return onDone({ passed: firstTry >= pass, stars: starsFor(firstTry, total, pass), score: firstTry, total, pass });
     const set = sets[r], steps = set.steps.slice(0, Math.min(k, set.steps.length));
     let placed = [], attempts = 0;
@@ -341,7 +357,7 @@ function runOrder(root, skill, level, onDone) {
     const q = skill === 's_plan' ? `Составь план: «${set.title}». Что сначала, что потом?` : skill === 's_story' ? `Разложи картинки по порядку: «${set.title}»` : `Расставь шаги по порядку: «${set.title}»`;
     const draw = () => {
       root.innerHTML = `${dotsHTML(total, r, results)}
-        <div class="q"><button class="say" type="button">🔊</button><span>${esc(q)}</span></div>
+        <div class="q"><button class="say" type="button" aria-label="Прочитать вслух">${icon('sound', 24)}</button><span>${esc(q)}</span></div>
         <div class="slots">${steps.map((_, n) => { const c = placed[n]; return `<button class="slotc ${c ? 'filled' : ''}" data-n="${n}" type="button"><b>${n + 1}</b>${c ? `<span class="e">${c.s[0]}</span><small>${esc(c.s[1])}</small>` : ''}</button>`; }).join('')}</div>
         <div class="cards">${cards.map((c, n) => placed.includes(c) ? '' : `<button class="card" data-n="${n}" type="button"><span class="e">${c.s[0]}</span><small>${esc(c.s[1])}</small></button>`).join('')}</div>`;
       root.querySelector('.say').onclick = () => Voice.say(q);
@@ -376,7 +392,7 @@ function runMemory(root, skill, level, onDone) {
   let moves = 0, first = null, busy = false, found = 0;
   const q = 'Открывай по две карточки и найди все пары';
   const draw = () => {
-    root.innerHTML = `<div class="q"><button class="say" type="button">🔊</button><span>${q}</span></div>
+    root.innerHTML = `<div class="q"><button class="say" type="button" aria-label="Прочитать вслух">${icon('sound', 24)}</button><span>${q}</span></div>
       <div class="meta">Ходов: <b>${moves}</b> из ${limit} · Пар: <b>${found}</b> из ${pairs}</div>
       <div class="mem">${deck.map((c, n) => `<button class="mcard ${c.open || c.done ? 'open' : ''} ${c.done ? 'done' : ''}" data-n="${n}" type="button">${c.open || c.done ? c.e : '❓'}</button>`).join('')}</div>`;
     root.querySelector('.say').onclick = () => Voice.say(q);
@@ -431,8 +447,9 @@ function makeMaze(level) {
 
 function runRobot(root, skill, level, onDone) {
   const total = 3; let r = 0, fails = 0;
-  const DIRS = { up: [0, -1, '⬆️'], down: [0, 1, '⬇️'], left: [-1, 0, '⬅️'], right: [1, 0, '➡️'] };
+  const DIRS = { up: [0, -1, 'вверх'], down: [0, 1, 'вниз'], left: [-1, 0, 'влево'], right: [1, 0, 'вправо'] };
   const round = () => {
+    if (!root.isConnected) return;
     if (r >= total) {
       const stars = fails <= 1 ? 3 : fails <= 3 ? 2 : 1;
       return onDone({ passed: true, stars, score: total, total, pass: total, fails });
@@ -442,7 +459,7 @@ function runRobot(root, skill, level, onDone) {
     const q = level === 3 ? 'Составь программу: робот берёт батарейку и едет к флажку' : 'Составь программу, чтобы робот доехал до флажка';
     const draw = (pos = m.start, got = false, boom = false) => {
       root.innerHTML = `<div class="dots">${Array.from({ length: total }, (_, i) => `<i class="${i < r ? 'ok' : i === r ? 'cur' : ''}"></i>`).join('')}</div>
-        <div class="q"><button class="say" type="button">🔊</button><span>${q}</span></div>
+        <div class="q"><button class="say" type="button" aria-label="Прочитать вслух">${icon('sound', 24)}</button><span>${q}</span></div>
         <div class="grid" style="--n:${m.N}">${Array.from({ length: m.N * m.N }, (_, i) => {
           const x = i % m.N, y = Math.floor(i / m.N), here = (p) => p && p[0] === x && p[1] === y;
           let c = '';
@@ -452,9 +469,9 @@ function runRobot(root, skill, level, onDone) {
           if (here(pos)) c = boom ? '💥' : '🤖';
           return `<div class="cell">${c}</div>`;
         }).join('')}</div>
-        <div class="tape">${prog.length ? prog.map((d, n) => `<button class="tok" data-n="${n}" type="button">${DIRS[d][2]}</button>`).join('') : '<span class="muted">Нажимай стрелки — получится программа</span>'}</div>
-        <div class="pad">${Object.entries(DIRS).map(([d, v]) => `<button class="arrow" data-d="${d}" type="button">${v[2]}</button>`).join('')}
-          <button class="btn run" type="button">▶ Пуск</button><button class="btn ghost clear" type="button">Стереть</button></div>`;
+        <div class="tape">${prog.length ? prog.map((d, n) => `<button class="tok" data-n="${n}" type="button" aria-label="Убрать команду ${DIRS[d][2]}">${icon(d, 22)}</button>`).join('') : '<span class="muted">Нажимай стрелки — получится программа</span>'}</div>
+        <div class="pad">${Object.entries(DIRS).map(([d, v]) => `<button class="arrow" data-d="${d}" type="button" aria-label="Команда ${v[2]}">${icon(d, 30)}</button>`).join('')}
+          <button class="btn run" type="button">${icon('play', 18)} Пуск</button><button class="btn ghost clear" type="button">Стереть</button></div>`;
       root.querySelector('.say').onclick = () => Voice.say(q);
       root.querySelectorAll('.arrow').forEach(b => b.onclick = () => { if (running) return; prog.push(b.dataset.d); Sound.tone(500, 0.06); draw(); });
       root.querySelectorAll('.tok').forEach(b => b.onclick = () => { if (running) return; prog.splice(+b.dataset.n, 1); draw(); });
@@ -498,18 +515,20 @@ function runRhythm(root, skill, level, onDone) {
     return p;
   };
   const round = () => {
+    if (!root.isConnected) return;
     if (r >= total) return onDone({ passed: score >= pass, stars: starsFor(score, total, pass), score, total, pass });
     const pat = makePattern();
     let taps = [], listening = false, timer;
     const q = 'Послушай ритм и повтори его на барабане';
     root.innerHTML = `${dotsHTML(total, r, results)}
-      <div class="q"><button class="say" type="button">🔊</button><span>${q}</span></div>
+      <div class="q"><button class="say" type="button" aria-label="Прочитать вслух">${icon('sound', 24)}</button><span>${q}</span></div>
       <div class="rhythm-line"></div>
       <button class="drum" type="button">🥁</button>
-      <div class="pad"><button class="btn ghost again" type="button">🔊 Послушать ещё раз</button></div>
-      <p class="status muted">Слушай…</p>`;
+      <div class="pad"><button class="btn ghost again" type="button">${icon('sound')} Послушать ещё раз</button></div>
+      <p class="status muted" aria-live="polite">Слушай…</p>`;
     const drum = root.querySelector('.drum'), status = root.querySelector('.status'), line = root.querySelector('.rhythm-line');
     const play = async () => {
+      if (!root.isConnected) return;
       listening = false; taps = []; status.textContent = 'Слушай…';
       line.innerHTML = '';
       await sleep(400);
@@ -556,13 +575,14 @@ function runMelody(root, skill, level, onDone) {
   const PADS = [['#e4572e', 72, 'до'], ['#f2b705', 76, 'ми'], ['#20a464', 79, 'соль'], ['#2e86de', 84, 'до']];
   let seq = [rnd(0, 3), rnd(0, 3)], lives = 3, input = [], listening = false;
   const q = 'Послушай мелодию и повтори её на цветных клавишах';
-  root.innerHTML = `<div class="q"><button class="say" type="button">🔊</button><span>${q}</span></div>
+  root.innerHTML = `<div class="q"><button class="say" type="button" aria-label="Прочитать вслух">${icon('sound', 24)}</button><span>${q}</span></div>
     <div class="meta">Длина мелодии: <b class="len">2</b> из ${target} · Жизни: <b class="lives">❤️❤️❤️</b></div>
     <div class="pads">${PADS.map((p, i) => `<button class="padk" data-i="${i}" style="--c:${p[0]}" type="button">${p[2]}</button>`).join('')}</div>
-    <p class="status muted">Слушай…</p>`;
+    <p class="status muted" aria-live="polite">Слушай…</p>`;
   const pads = root.querySelectorAll('.padk'), status = root.querySelector('.status');
   const flash = i => { Sound.tone(midiFreq(PADS[i][1]), 0.4); pads[i].classList.add('lit'); setTimeout(() => pads[i].classList.remove('lit'), 300); };
   const play = async () => {
+    if (!root.isConnected) return;
     listening = false; input = []; status.textContent = 'Слушай…';
     root.querySelector('.len').textContent = seq.length;
     await sleep(700);
@@ -596,7 +616,7 @@ function runActivity(root, skill, level, onDone) {
   const task = ACTIVITIES[skill][level - 1];
   root.innerHTML = `<div class="activity">
       <div class="huge">${compById(SKILLS[skill].comp).icon}</div>
-      <div class="q"><button class="say" type="button">🔊</button><span>${esc(task)}</span></div>
+      <div class="q"><button class="say" type="button" aria-label="Прочитать вслух">${icon('sound', 24)}</button><span>${esc(task)}</span></div>
       <p class="muted">Это задание выполняется в реальной жизни. Когда ребёнок справится, взрослый ставит зачёт.</p>
       <div class="pad"><button class="btn confirm" type="button">✅ Ребёнок выполнил — поставить зачёт</button></div>
     </div>`;

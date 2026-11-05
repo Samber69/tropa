@@ -21,6 +21,11 @@ function formatAge(months) {
   return m ? `${y} ${yw} ${m} мес.` : `${y} ${yw}`;
 }
 
+const plural = (n, one, few, many) => {
+  const a = n % 100, b = n % 10;
+  return a >= 11 && a <= 14 ? many : b === 1 ? one : b >= 2 && b <= 4 ? few : many;
+};
+
 function formatDate(iso) {
   const d = new Date(iso);
   return `${d.getDate()} ${MONTHS_RU_GEN[d.getMonth()]} ${d.getFullYear()}`;
@@ -193,7 +198,7 @@ function monthEvents(mo, i, n, has, profile, school) {
   const ev = [];
   if (i === 0) {
     ev.push('Диагностика: пройти уровень «Старт» во всех упражнениях');
-    ev.push('Записаться в кружки и секции (см. «Офлайн»)');
+    ev.push('Записаться в кружки и секции (список ниже)');
   }
   if (mo.m === 11 && has('music')) ev.push('Новогодний домашний концерт: ритм и песня для семьи');
   if (mo.m === 0 && has('sport')) ev.push('Зимние активности: коньки, лыжи, санки');

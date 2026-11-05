@@ -99,6 +99,11 @@ function scoreProfessions(compScores) {
   })).sort((a, b) => b.score - a.score);
 }
 
+// Выбранные профессии по убыванию совпадения: один порядок для экрана и PDF.
+function selectedProfessions(selection, profScores) {
+  return profScores.filter(x => selection.profs.includes(x.id)).map(x => PROFESSIONS.find(p => p.id === x.id));
+}
+
 // Предвыбор: сильные компетенции, топ-5 профессий, все навыки выбранных компетенций.
 function defaultSelection(compScores, profScores) {
   const comps = compScores.filter(c => c.score >= 40).map(c => c.id);

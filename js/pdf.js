@@ -41,7 +41,7 @@ function buildPdfDoc({ profile, selection, progress }, compScores, profScores, p
     h1('1. Главное'),
     ul([
       `Сильные стороны: ${selComps.slice(0, 4).map(c => `${c.name.toLowerCase()} (${scoreOf[c.id].score})`).join(', ')}.`,
-      `Профессии-ориентиры: ${selection.profs.map(id => PROFESSIONS.find(p => p.id === id).name).join('; ')}.`,
+      `Профессии-ориентиры: ${selectedProfessions(selection, profScores).map(p => p.name).join('; ') || 'не выбраны'}.`,
       plan.schoolAge ? `К ${formatDate(profile.endDate)} ребёнку будет ${formatAge(plan.schoolAge)}: программа завершается готовностью к 1 классу.` : `Программа рассчитана на ${plan.months.length} мес.`,
       `Итоговый проект — «${plan.project.title}»: ${plan.project.text}`,
       ...plan.parents.map(r => `${r.who} (${r.about}) ${r.text}`),

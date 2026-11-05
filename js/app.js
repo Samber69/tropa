@@ -198,7 +198,7 @@ function viewRecommend() {
 
 // ---------- Траектория ----------
 function viewPlan() {
-  const d = derived(), { plan, compScores } = d, p = state.profile, sel = state.selection;
+  const d = derived(), { plan, compScores, profScores } = d, p = state.profile, sel = state.selection;
   const scoreOf = Object.fromEntries(compScores.map(c => [c.id, c.score]));
   const stats = progressStats(sel, state.progress);
   const maxMin = Math.max(...plan.weekly.map(w => w.minutes), 1);
@@ -215,7 +215,7 @@ function viewPlan() {
 
   <section class="key">
     <div><span>Сильные стороны</span><b>${comps.slice(0, 3).map(c => c.icon + ' ' + c.name).join('<br>')}</b></div>
-    <div><span>Профессии-ориентиры</span><b>${sel.profs.slice(0, 3).map(id => { const x = PROFESSIONS.find(q => q.id === id); return x.icon + ' ' + x.name; }).join('<br>')}</b></div>
+    <div><span>Профессии-ориентиры</span><b>${selectedProfessions(sel, profScores).map(x => x.icon + ' ' + x.name).join('<br>') || 'Не выбраны'}</b></div>
     <div><span>Итоговый проект</span><b>🏆 ${plan.project.title}</b><p>${plan.project.text}</p></div>
   </section>
 
